@@ -1,0 +1,19 @@
+model AuditLog {
+  id                  String @id @default(uuid())
+
+  userId              String
+
+  user                User @relation(fields: [userId], references: [id])
+
+  module              String
+
+  action              String
+
+  oldData             Json?
+
+  newData             Json?
+
+  ipAddress           String?
+
+  createdAt           DateTime @default(now())
+}

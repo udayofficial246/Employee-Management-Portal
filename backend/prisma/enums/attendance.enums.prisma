@@ -1,0 +1,8 @@
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LATE
+  HOLIDAY
+  WEEK_OFF
+}

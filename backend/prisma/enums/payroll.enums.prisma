@@ -1,0 +1,5 @@
+enum PayrollStatus {
+  GENERATED
+  PAID
+  HOLD
+}

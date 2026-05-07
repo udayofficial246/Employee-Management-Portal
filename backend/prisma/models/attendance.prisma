@@ -1,0 +1,47 @@
+model Attendance {
+  id                    String @id @default(uuid())
+
+  employeeId            String
+
+  employee              User @relation(fields: [employeeId], references: [id])
+
+  date                  DateTime
+
+  checkIn               DateTime?
+
+  checkOut              DateTime?
+
+  totalHours            Float?
+
+  status                AttendanceStatus
+
+  isRegularized         Boolean @default(false)
+
+  createdAt             DateTime @default(now())
+
+  correctionRequests    AttendanceCorrection[]
+
+  @@unique([employeeId, date])
+}
+
+model AttendanceCorrection {
+  id                    String @id @default(uuid())
+
+  attendanceId          String
+
+  attendance            Attendance @relation(fields: [attendanceId], references: [id])
+
+  requestedById         String
+
+  requestedBy           User @relation(fields: [requestedById], references: [id])
+
+  approverId            String?
+
+  approver              User? @relation("AttendanceApprover", fields: [approverId], references: [id])
+
+  reason                String
+
+  status                LeaveStatus @default(PENDING)
+
+  createdAt             DateTime @default(now())
+}

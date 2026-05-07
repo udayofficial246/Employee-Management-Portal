@@ -1,0 +1,76 @@
+model User {
+  id                String   @id @default(uuid())
+
+  employeeCode      String   @unique
+
+  firstName         String
+  lastName          String
+
+  email             String   @unique
+  password          String
+
+  phone             String?
+  designation       String?
+
+  profileImage      String?
+
+  joiningDate       DateTime?
+
+  status            UserStatus @default(ACTIVE)
+
+  //////////////////////////////////////////////////////
+  // ROLE
+  //////////////////////////////////////////////////////
+
+  roleId            String
+  role              Role @relation(fields: [roleId], references: [id])
+
+  //////////////////////////////////////////////////////
+  // DEPARTMENT
+  //////////////////////////////////////////////////////
+
+  departmentId      String?
+  department        Department? @relation(fields: [departmentId], references: [id])
+
+  //////////////////////////////////////////////////////
+  // DYNAMIC HIERARCHY
+  //////////////////////////////////////////////////////
+
+  reportsToId       String?
+
+  reportsTo         User? @relation("Hierarchy", fields: [reportsToId], references: [id])
+
+  subordinates      User[] @relation("Hierarchy")
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  attendance                Attendance[]
+
+  leaves                    Leave[]
+
+  payrolls                  Payroll[]
+
+  createdProjects           Project[] @relation("ProjectCreator")
+
+  assignedProjects          Project[] @relation("ProjectAssignee")
+
+  assignedTasks             Task[] @relation("TaskAssignedTo")
+
+  createdTasks              Task[] @relation("TaskAssignedBy")
+
+  taskComments              TaskComment[]
+
+  uploadedFiles             FileAttachment[]
+
+  notificationsReceived     Notification[] @relation("NotificationReceiver")
+
+  notificationsSent         Notification[] @relation("NotificationSender")
+
+  auditLogs                 AuditLog[]
+
+  createdAt                 DateTime @default(now())
+
+  updatedAt                 DateTime @updatedAt
+}

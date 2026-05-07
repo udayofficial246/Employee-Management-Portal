@@ -1,0 +1,29 @@
+model Payroll {
+  id                  String @id @default(uuid())
+
+  employeeId          String
+
+  employee            User @relation(fields: [employeeId], references: [id])
+
+  basicSalary         Float
+
+  bonus               Float @default(0)
+
+  deductions          Float @default(0)
+
+  netSalary           Float
+
+  payrollMonth        DateTime
+
+  status              PayrollStatus @default(GENERATED)
+
+  generatedById       String
+
+  generatedBy         User @relation("PayrollGenerator", fields: [generatedById], references: [id])
+
+  payslipUrl          String?
+
+  createdAt           DateTime @default(now())
+
+  @@unique([employeeId, payrollMonth])
+}
