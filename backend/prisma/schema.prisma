@@ -1,9 +1,511 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["prismaSchemaFolder"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url      = env("DATABASE_URI")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LATE
+  HOLIDAY
+  WEEK_OFF
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+enum PayrollStatus {
+  GENERATED
+  PAID
+  HOLD
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  COMPLETED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model Attendance {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  employee User @relation(fields: [employeeId], references: [id])
+
+  date DateTime
+
+  checkIn DateTime?
+
+  checkOut DateTime?
+
+  totalHours Float?
+
+  status AttendanceStatus
+
+  isRegularized Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  correctionRequests AttendanceCorrection[]
+
+  @@unique([employeeId, date])
+}
+
+model AttendanceCorrection {
+  id String @id @default(uuid())
+
+  attendanceId String
+
+  attendance Attendance @relation(fields: [attendanceId], references: [id])
+
+  requestedById String
+
+  requestedBy User @relation(fields: [requestedById], references: [id])
+
+  approverId String?
+
+  approver User? @relation("AttendanceApprover", fields: [approverId], references: [id])
+
+  reason String
+
+  status LeaveStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id String @id @default(uuid())
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id])
+
+  module String
+
+  action String
+
+  oldData Json?
+
+  newData Json?
+
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+}
+
+model Department {
+  id String @id @default(uuid())
+
+  name        String  @unique
+  description String?
+
+  departmentHeadId String?
+
+  departmentHead User? @relation("DepartmentHead", fields: [departmentHeadId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  employees User[] @relation("DepartmentEmployees")
+}
+
+model FileAttachment {
+  id String @id @default(uuid())
+
+  fileName String
+
+  fileUrl String
+
+  mimeType String
+
+  size Int
+
+  uploadedById String
+
+  uploadedBy User @relation(fields: [uploadedById], references: [id])
+
+  //////////////////////////////////////////////////////
+  // OPTIONAL RELATIONS
+  //////////////////////////////////////////////////////
+
+  projectId String?
+
+  project Project? @relation(fields: [projectId], references: [id])
+
+  taskId String?
+
+  task Task? @relation(fields: [taskId], references: [id])
+
+  uploadedAt DateTime @default(now())
+}
+
+model LeaveType {
+  id String @id @default(uuid())
+
+  name String @unique
+
+  totalAllowedDays Int
+
+  createdAt DateTime @default(now())
+
+  leaves Leave[]
+}
+
+model Leave {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  employee User @relation(fields: [employeeId], references: [id])
+
+  leaveTypeId String
+
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  startDate DateTime
+
+  endDate DateTime
+
+  reason String
+
+  // ONLY immediate upper hierarchy approves
+
+  approverId String?
+
+  approver User? @relation("LeaveApprover", fields: [approverId], references: [id])
+
+  status LeaveStatus @default(PENDING)
+
+  rejectionReason String?
+
+  approvedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id String @id @default(uuid())
+
+  senderId String?
+
+  sender User? @relation("NotificationSender", fields: [senderId], references: [id])
+
+  receiverId String
+
+  receiver User @relation("NotificationReceiver", fields: [receiverId], references: [id])
+
+  title String
+
+  message String
+
+  type NotificationType @default(INFO)
+
+  isRead Boolean @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+model Payroll {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  employee User @relation(fields: [employeeId], references: [id])
+
+  basicSalary Float
+
+  bonus Float @default(0)
+
+  deductions Float @default(0)
+
+  netSalary Float
+
+  payrollMonth DateTime
+
+  status PayrollStatus @default(GENERATED)
+
+  generatedById String
+
+  generatedBy User @relation("PayrollGenerator", fields: [generatedById], references: [id])
+
+  payslipUrl String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([employeeId, payrollMonth])
+}
+
+model Project {
+  id String @id @default(uuid())
+
+  title String
+
+  description String?
+
+  createdById String
+
+  createdBy User @relation("ProjectCreator", fields: [createdById], references: [id])
+
+  assignedToId String?
+
+  assignedTo User? @relation("ProjectAssignee", fields: [assignedToId], references: [id])
+
+  priority Priority @default(MEDIUM)
+
+  status ProjectStatus @default(PLANNING)
+
+  startDate DateTime?
+
+  deadline DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  tasks Task[]
+
+  members ProjectMember[]
+
+  files FileAttachment[]
+}
+
+model ProjectMember {
+  id String @id @default(uuid())
+
+  projectId String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id])
+
+  roleInProject String?
+
+  joinedAt DateTime @default(now())
+
+  @@unique([projectId, userId])
+}
+
+model Task {
+  id String @id @default(uuid())
+
+  projectId String
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  title String
+
+  description String?
+
+  assignedToId String
+
+  assignedTo User @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+
+  assignedById String
+
+  assignedBy User @relation("TaskAssignedBy", fields: [assignedById], references: [id])
+
+  priority Priority @default(MEDIUM)
+
+  status TaskStatus @default(TODO)
+
+  startDate DateTime?
+
+  deadline DateTime?
+
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  comments TaskComment[]
+
+  files FileAttachment[]
+}
+
+model TaskComment {
+  id String @id @default(uuid())
+
+  taskId String
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  userId String
+
+  user User @relation(fields: [userId], references: [id])
+
+  comment String
+
+  createdAt DateTime @default(now())
+}
+
+model Role {
+  id String @id @default(uuid())
+
+  name        String  @unique
+  description String?
+
+  isSystemRole Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  users User[]
+
+  permissions RolePermission[]
+}
+
+model Permission {
+  id String @id @default(uuid())
+
+  module String
+  action String
+
+  createdAt DateTime @default(now())
+
+  roles RolePermission[]
+
+  @@unique([module, action])
+}
+
+model RolePermission {
+  id String @id @default(uuid())
+
+  roleId       String
+  permissionId String
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model User {
+  id String @id @default(uuid())
+
+  employeeCode String @unique
+
+  firstName String
+  lastName  String
+
+  email    String @unique
+  password String
+
+  phone       String?
+  designation String?
+
+  profileImage String?
+
+  joiningDate DateTime?
+
+  status UserStatus @default(ACTIVE)
+
+  //////////////////////////////////////////////////////
+  // ROLE
+  //////////////////////////////////////////////////////
+
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id])
+
+  //////////////////////////////////////////////////////
+  // DEPARTMENT
+  //////////////////////////////////////////////////////
+
+  departmentId String?
+  department   Department? @relation("DepartmentEmployees", fields: [departmentId], references: [id])
+
+  headedDepartments Department[] @relation("DepartmentHead")
+
+  //////////////////////////////////////////////////////
+  // DYNAMIC HIERARCHY
+  //////////////////////////////////////////////////////
+
+  reportsToId String?
+
+  reportsTo User? @relation("Hierarchy", fields: [reportsToId], references: [id])
+
+  subordinates User[] @relation("Hierarchy")
+
+  //////////////////////////////////////////////////////
+  // RELATIONS
+  //////////////////////////////////////////////////////
+
+  attendance Attendance[]
+
+  leaves Leave[]
+
+  payrolls Payroll[]
+
+  createdProjects Project[] @relation("ProjectCreator")
+
+  assignedProjects Project[] @relation("ProjectAssignee")
+
+  assignedTasks Task[] @relation("TaskAssignedTo")
+
+  createdTasks Task[] @relation("TaskAssignedBy")
+
+  taskComments TaskComment[]
+
+  uploadedFiles FileAttachment[]
+
+  notificationsReceived Notification[] @relation("NotificationReceiver")
+
+  notificationsSent Notification[] @relation("NotificationSender")
+
+  auditLogs                      AuditLog[]
+  attendanceCorrectionsRequested AttendanceCorrection[]
+  attendanceCorrectionsApproved  AttendanceCorrection[] @relation("AttendanceApprover")
+  leavesApproved                 Leave[]                @relation("LeaveApprover")
+  payrollsGenerated              Payroll[]              @relation("PayrollGenerator")
+  projectMemberships             ProjectMember[]
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
 }
