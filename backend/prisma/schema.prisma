@@ -393,6 +393,8 @@ model Role {
 
   isSystemRole Boolean @default(false)
 
+  level Int @default(1)
+
   createdAt DateTime @default(now())
 
   users User[]

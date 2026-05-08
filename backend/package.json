@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-<<<<<<< HEAD
     "dev": "node src/app.js",
     "build": "npm run build",
     "start": "node src/app.js",
@@ -15,11 +14,6 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:validate": "prisma validate"
-=======
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
-    "seed": "node prisma/seed.js"
->>>>>>> 2b0a80dc0eebea6279437954dc0b6c70b8a898e5
   },
   "keywords": [],
   "author": "",
