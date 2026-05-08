@@ -429,36 +429,73 @@ model RolePermission {
 model User {
   id String @id @default(uuid())
 
+  //////////////////////////////////////////////////////
+  // BASIC INFO
+  //////////////////////////////////////////////////////
+
   employeeCode String @unique
 
   firstName String
-  lastName  String
 
-  email    String @unique
+  lastName String
+
+  email String @unique
+
   password String
 
-  phone       String?
+  phone String? @unique
+
   designation String?
 
   profileImage String?
 
   joiningDate DateTime?
 
+  location String?
+
+  //////////////////////////////////////////////////////
+  // SALARY
+  //////////////////////////////////////////////////////
+
+  salary Float?
+
+  //////////////////////////////////////////////////////
+  // ACCOUNT STATUS
+  //////////////////////////////////////////////////////
+
   status UserStatus @default(ACTIVE)
+
+  isDeleted Boolean @default(false)
+
+  deletedAt DateTime?
+
+  //////////////////////////////////////////////////////
+  // SECURITY
+  //////////////////////////////////////////////////////
+
+  lastLoginAt DateTime?
+
+  passwordChangedAt DateTime?
+
+  failedLoginAttempts Int @default(0)
+
+  isLocked Boolean @default(false)
 
   //////////////////////////////////////////////////////
   // ROLE
   //////////////////////////////////////////////////////
 
   roleId String
-  role   Role   @relation(fields: [roleId], references: [id])
+
+  role Role @relation(fields: [roleId], references: [id])
 
   //////////////////////////////////////////////////////
   // DEPARTMENT
   //////////////////////////////////////////////////////
 
   departmentId String?
-  department   Department? @relation("DepartmentEmployees", fields: [departmentId], references: [id])
+
+  department Department? @relation("DepartmentEmployees", fields: [departmentId], references: [id])
 
   headedDepartments Department[] @relation("DepartmentHead")
 
@@ -471,6 +508,16 @@ model User {
   reportsTo User? @relation("Hierarchy", fields: [reportsToId], references: [id])
 
   subordinates User[] @relation("Hierarchy")
+
+  //////////////////////////////////////////////////////
+  // CREATED BY
+  //////////////////////////////////////////////////////
+
+  createdById String?
+
+  createdBy User? @relation("EmployeeCreator", fields: [createdById], references: [id])
+
+  employeesCreated User[] @relation("EmployeeCreator")
 
   //////////////////////////////////////////////////////
   // RELATIONS
@@ -498,14 +545,35 @@ model User {
 
   notificationsSent Notification[] @relation("NotificationSender")
 
-  auditLogs                      AuditLog[]
+  auditLogs AuditLog[]
+
   attendanceCorrectionsRequested AttendanceCorrection[]
-  attendanceCorrectionsApproved  AttendanceCorrection[] @relation("AttendanceApprover")
-  leavesApproved                 Leave[]                @relation("LeaveApprover")
-  payrollsGenerated              Payroll[]              @relation("PayrollGenerator")
-  projectMemberships             ProjectMember[]
+
+  attendanceCorrectionsApproved AttendanceCorrection[] @relation("AttendanceApprover")
+
+  leavesApproved Leave[] @relation("LeaveApprover")
+
+  payrollsGenerated Payroll[] @relation("PayrollGenerator")
+
+  projectMemberships ProjectMember[]
+
+  //////////////////////////////////////////////////////
+  // TIMESTAMPS
+  //////////////////////////////////////////////////////
 
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
+
+  //////////////////////////////////////////////////////
+  // INDEXES
+  //////////////////////////////////////////////////////
+
+  @@index([roleId])
+  @@index([departmentId])
+  @@index([reportsToId])
+  @@index([createdById])
+  @@index([status])
+  @@index([email])
+  @@index([employeeCode])
 }
