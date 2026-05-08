@@ -19,7 +19,7 @@ export const employeeSchema = z.object({
     lastName: z
         .string()
         .trim()
-        .min(0, "Last name must be at least 2 characters")
+        .min(0, "Last name must be at least 0 characters")
         .max(50, "Last name cannot exceed 50 characters"),
 
     email: z
