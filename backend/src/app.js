@@ -1,4 +1,5 @@
 import express from "express";
+<<<<<<< HEAD
 import prisma from "./prisma.js";
 
 
@@ -24,3 +25,18 @@ async function startServer() {
 
 
 startServer();
+=======
+import prisma from "./utils/prisma.js";
+import cors from 'cors';
+import authRouter from './routes/auth.js';
+
+const app = express()
+app.use(cors())
+app.use(express.json())
+app.use('/api/auth',authRouter)
+
+
+app.listen(process.env.PORT, ()=>{
+    console.log(`Server is runnning on port ${process.env.PORT}`);
+})
+>>>>>>> 2b0a80dc0eebea6279437954dc0b6c70b8a898e5

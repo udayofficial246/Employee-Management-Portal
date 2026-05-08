@@ -1,0 +1,40 @@
+model Role {
+  id            String   @id @default(uuid())
+
+  name          String   @unique
+  description   String?
+
+  isSystemRole  Boolean  @default(false)
+
+  createdAt     DateTime @default(now())
+
+  users         User[]
+
+  permissions   RolePermission[]
+}
+
+model Permission {
+  id            String   @id @default(uuid())
+
+  module        String
+  action        String
+
+  createdAt     DateTime @default(now())
+
+  roles         RolePermission[]
+
+  @@unique([module, action])
+}
+
+model RolePermission {
+  id              String @id @default(uuid())
+
+  roleId          String
+  permissionId    String
+
+  role            Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  permission      Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
